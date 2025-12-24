@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/transfer
+    username: postgres
+    password: Salam
+    hikari:
+      maximum-pool-size: 50
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
