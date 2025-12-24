@@ -1,0 +1,19 @@
+CREATE TABLE account (
+  id UUID PRIMARY KEY,
+  currency VARCHAR(3),
+  status VARCHAR(20)
+);
+
+CREATE TABLE ledger_entry (
+  id UUID PRIMARY KEY,
+  account_id UUID,
+  transfer_id UUID,
+  amount NUMERIC(18,2),
+  created_at TIMESTAMP,
+  UNIQUE (transfer_id, account_id)
+);
+
+CREATE TABLE idempotency_key (
+  key UUID PRIMARY KEY,
+  created_at TIMESTAMP
+);
