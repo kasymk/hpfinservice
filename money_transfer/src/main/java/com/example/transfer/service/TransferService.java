@@ -10,6 +10,7 @@ import com.example.transfer.repository.IdempotencyRepository;
 import com.example.transfer.repository.LedgerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -24,7 +25,10 @@ public class TransferService {
     private final LedgerRepository ledgerRepo;
     private final IdempotencyRepository idemRepo;
 
-    @Transactional
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
     public void transfer(UUID idempotencyKey, TransferRequest req) {
 
         // 1️⃣ Idempotency check
@@ -34,7 +38,13 @@ public class TransferService {
 
         // 2️⃣ Lock accounts (prevents double spend)
         Account from = accountRepo.lockById(req.getFromAccount());
+        if (from == null) {
+            throw new BusinessException("Source account not found");
+        }
         Account to = accountRepo.lockById(req.getToAccount());
+        if (to == null) {
+            throw new BusinessException("Target account not found");
+        }
 
         BigDecimal balance =
                 ledgerRepo.calculateBalance(from.getId());
@@ -61,7 +71,7 @@ public class TransferService {
 
         // 5️⃣ Store idempotency key
         IdempotencyKey key = new IdempotencyKey();
-        key.setKey(idempotencyKey);
+        key.setId(idempotencyKey);
         key.setCreatedAt(Instant.now());
         idemRepo.save(key);
     }

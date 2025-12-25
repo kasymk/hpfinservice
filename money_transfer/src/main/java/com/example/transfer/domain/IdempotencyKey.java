@@ -16,7 +16,7 @@ import java.util.UUID;
 public class IdempotencyKey {
 
     @Id
-    private UUID key;
+    private UUID id;
 
     private Instant createdAt;
 }

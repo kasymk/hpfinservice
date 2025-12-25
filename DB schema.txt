@@ -14,6 +14,8 @@ CREATE TABLE ledger_entry (
 );
 
 CREATE TABLE idempotency_key (
-  key UUID PRIMARY KEY,
+  id UUID PRIMARY KEY,
   created_at TIMESTAMP
 );
+
+CREATE INDEX idx_ledger_account ON ledger_entry(account_id);

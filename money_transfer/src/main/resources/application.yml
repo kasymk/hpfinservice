@@ -10,3 +10,8 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+
+  logging:
+    level:
+      org.hibernate.orm.boot: DEBUG
+      org.hibernate.mapping: DEBUG
