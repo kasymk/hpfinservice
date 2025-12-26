@@ -19,3 +19,9 @@ CREATE TABLE idempotency_key (
 );
 
 CREATE INDEX idx_ledger_account ON ledger_entry(account_id);
+
+ALTER TABLE account
+ADD COLUMN client_id UUID NOT NULL;
+
+CREATE INDEX idx_account_client_id
+ON account(client_id);

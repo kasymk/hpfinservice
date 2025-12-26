@@ -47,11 +47,13 @@ class TransferControllerTest {
         from.setId(fromId);
         from.setCurrency("USD");
         from.setStatus("ACTIVE");
+        from.setClientId(UUID.randomUUID());
 
         Account to = new Account();
         to.setId(toId);
         to.setCurrency("USD");
         to.setStatus("ACTIVE");
+        to.setClientId(UUID.randomUUID());
 
         accountRepository.save(from);
         accountRepository.save(to);

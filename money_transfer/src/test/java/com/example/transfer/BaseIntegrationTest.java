@@ -39,6 +39,7 @@ abstract class BaseIntegrationTest {
         acc.setId(id);
         acc.setCurrency(currency);
         acc.setStatus("ACTIVE");
+        acc.setClientId(UUID.randomUUID());
         accountRepo.save(acc);
 
         if (initialBalance.compareTo(BigDecimal.ZERO) > 0) {

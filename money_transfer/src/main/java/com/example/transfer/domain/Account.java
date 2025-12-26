@@ -18,6 +18,9 @@ public class Account {
     @Id
     private UUID id;
 
+    @Column(name = "client_id", nullable = false)
+    private UUID clientId;
+
     @Column(
             nullable = false,
             length = 3,
