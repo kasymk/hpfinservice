@@ -24,13 +24,19 @@ public class TransferService {
     private final AccountRepository accountRepo;
     private final LedgerRepository ledgerRepo;
     private final IdempotencyRepository idemRepo;
+    private final TransferPostProcessor postProcessor;
 
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
     public void transfer(UUID idempotencyKey, TransferRequest req) {
+        performTransfer(idempotencyKey, req);
 
+        postProcessor.handlePostTransfer(req);
+    }
+
+    private void performTransfer(UUID idempotencyKey, TransferRequest req) {
         // 1️⃣ Idempotency check
         if (idemRepo.existsById(idempotencyKey)) {
             return;

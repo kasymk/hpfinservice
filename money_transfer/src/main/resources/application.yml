@@ -15,6 +15,7 @@ spring:
     level:
       org.hibernate.orm.boot: DEBUG
       org.hibernate.mapping: DEBUG
+      org.springframework.retry: DEBUG
 
   cache:
     type: redis
