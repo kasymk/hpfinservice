@@ -1,14 +1,17 @@
 package com.example.transfer.service;
 
-import com.example.transfer.domain.Account;
-import com.example.transfer.domain.IdempotencyKey;
-import com.example.transfer.domain.LedgerEntry;
+import com.example.transfer.domain.*;
 import com.example.transfer.dto.TransferRequest;
+import com.example.transfer.events.TransferCompletedEvent;
 import com.example.transfer.exception.BusinessException;
 import com.example.transfer.repository.AccountRepository;
 import com.example.transfer.repository.IdempotencyRepository;
 import com.example.transfer.repository.LedgerRepository;
+import com.example.transfer.repository.OutboxRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,22 +27,41 @@ public class TransferService {
     private final AccountRepository accountRepo;
     private final LedgerRepository ledgerRepo;
     private final IdempotencyRepository idemRepo;
+    private final OutboxRepository outboxRepository;
     private final TransferPostProcessor postProcessor;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
     public void transfer(UUID idempotencyKey, TransferRequest req) {
-        performTransfer(idempotencyKey, req);
+        UUID transferId = performTransfer(idempotencyKey, req);
+        if (transferId == null) return;
 
         postProcessor.handlePostTransfer(req);
+        createOutboxEvent(transferId, req);
     }
 
-    private void performTransfer(UUID idempotencyKey, TransferRequest req) {
+    private void createOutboxEvent(UUID transferId, TransferRequest req) {
+        OutboxEvent event = new OutboxEvent();
+        event.setId(UUID.randomUUID());
+        event.setAggregateType("TRANSFER");
+        event.setAggregateId(transferId);
+        event.setEventType("TRANSFER_COMPLETED");
+        event.setPayload(createPayload(transferId, req));
+        event.setStatus("NEW");
+        event.setCreatedAt(Instant.now());
+
+        outboxRepository.save(event);
+    }
+
+    private UUID performTransfer(UUID idempotencyKey, TransferRequest req) {
         // 1️⃣ Idempotency check
         if (idemRepo.existsById(idempotencyKey)) {
-            return;
+            return null;
         }
 
         // 2️⃣ Lock accounts (prevents double spend)
@@ -80,6 +102,8 @@ public class TransferService {
         key.setId(idempotencyKey);
         key.setCreatedAt(Instant.now());
         idemRepo.save(key);
+
+        return transferId;
     }
 
     private LedgerEntry entry(UUID accountId,
@@ -93,5 +117,30 @@ public class TransferService {
         e.setCreatedAt(Instant.now());
         return e;
     }
+
+    private String createPayload(
+            UUID transferId,
+            TransferRequest req
+    ) {
+        try {
+            TransferCompletedEvent event =
+                    new TransferCompletedEvent(
+                            transferId,
+                            req.getFromAccount(),
+                            req.getToAccount(),
+                            req.getAmount(),
+                            req.getCurrency(),
+                            Instant.now()
+                    );
+
+            return objectMapper.writeValueAsString(event);
+
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(
+                    "Failed to serialize transfer event", e
+            );
+        }
+    }
+
 }
 
