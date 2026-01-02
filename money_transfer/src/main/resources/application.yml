@@ -5,6 +5,8 @@ spring:
     password: Salam
     hikari:
       maximum-pool-size: 50
+  webclient:
+    connect-timeout: 50ms
 
   jpa:
     open-in-view: false
@@ -37,3 +39,11 @@ spring:
       retries: 3
       properties:
         enable.idempotence: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      fraudService:
+        slidingWindowSize: 20
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s

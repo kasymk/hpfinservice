@@ -1,6 +1,8 @@
 package com.example.transfer.service;
 
 import com.example.transfer.domain.*;
+import com.example.transfer.dto.FraudCheckRequest;
+import com.example.transfer.dto.FraudDecision;
 import com.example.transfer.dto.TransferRequest;
 import com.example.transfer.events.TransferCompletedEvent;
 import com.example.transfer.exception.BusinessException;
@@ -29,6 +31,7 @@ public class TransferService {
     private final IdempotencyRepository idemRepo;
     private final OutboxRepository outboxRepository;
     private final TransferPostProcessor postProcessor;
+    private final FraudCheckService fraudCheckService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -38,11 +41,33 @@ public class TransferService {
             rollbackFor = Exception.class
     )
     public void transfer(UUID idempotencyKey, TransferRequest req) {
-        UUID transferId = performTransfer(idempotencyKey, req);
-        if (transferId == null) return;
+        UUID transferId = UUID.randomUUID();
+//        fraudCheck(transferId, req);
+        performTransfer(idempotencyKey, req, transferId);
 
         postProcessor.handlePostTransfer(req);
         createOutboxEvent(transferId, req);
+    }
+
+    private void fraudCheck(UUID transferId, TransferRequest req) {
+        FraudDecision decision =
+                fraudCheckService.check(
+                        new FraudCheckRequest(
+                                transferId,
+                                req.getFromAccount(),
+                                req.getToAccount(),
+                                req.getAmount(),
+                                req.getCurrency()
+                        )
+                );
+
+        if (decision == FraudDecision.REJECT) {
+            throw new BusinessException("Transfer rejected by fraud system");
+        }
+
+        if (decision == FraudDecision.REVIEW) {
+            throw new BusinessException("Transfer pending fraud review");
+        }
     }
 
     private void createOutboxEvent(UUID transferId, TransferRequest req) {
@@ -58,10 +83,10 @@ public class TransferService {
         outboxRepository.save(event);
     }
 
-    private UUID performTransfer(UUID idempotencyKey, TransferRequest req) {
+    private void performTransfer(UUID idempotencyKey, TransferRequest req, UUID transferId) {
         // 1️⃣ Idempotency check
         if (idemRepo.existsById(idempotencyKey)) {
-            return null;
+            return;
         }
 
         // 2️⃣ Lock accounts (prevents double spend)
@@ -80,8 +105,6 @@ public class TransferService {
         if (balance.compareTo(req.getAmount()) < 0) {
             throw new BusinessException("Insufficient funds");
         }
-
-        UUID transferId = UUID.randomUUID();
 
         // 3️⃣ Debit
         ledgerRepo.save(entry(
@@ -103,7 +126,6 @@ public class TransferService {
         key.setCreatedAt(Instant.now());
         idemRepo.save(key);
 
-        return transferId;
     }
 
     private LedgerEntry entry(UUID accountId,
