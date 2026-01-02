@@ -31,15 +31,17 @@ CREATE TABLE outbox_event (
   aggregate_type VARCHAR(50) NOT NULL,
   aggregate_id UUID NOT NULL,
   event_type VARCHAR(50) NOT NULL,
-  payload JSONB NOT NULL,
+  payload TEXT NOT NULL,
   status VARCHAR(20) NOT NULL,
   created_at TIMESTAMP NOT NULL,
   sent_at TIMESTAMP
 );
 
-CREATE INDEX idx_outbox_status
+CREATE INDEX idx_outbox_event_status
 ON outbox_event(status);
 
-NEW        – waiting to be published
-PUBLISHED  – successfully sent to Kafka
-FAILED     – retry later / investigate
+CREATE INDEX idx_outbox_event_created_at
+ON outbox_event(created_at);
+
+
+NEW → SENT → FAILED
