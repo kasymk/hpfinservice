@@ -1,0 +1,15 @@
+docker run -d --name kafka -p 9092:9092 apache/kafka:latest
+
+CREATE TABLE processed_event (
+    event_id VARCHAR(64) PRIMARY KEY,
+    processed_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE account_view (
+    account_id     VARCHAR(64)  NOT NULL,
+    client_id      VARCHAR(64)  NOT NULL,
+    balance        NUMERIC(19, 4) NOT NULL,
+    currency       VARCHAR(3)      NOT NULL,
+    last_updated   TIMESTAMP    NOT NULL,
+    CONSTRAINT pk_account_view PRIMARY KEY (account_id)
+);
