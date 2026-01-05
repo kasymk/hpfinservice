@@ -22,6 +22,7 @@
         <java.version>17</java.version>
     </properties>
 
+    <packaging>jar</packaging>
 
     <!-- ========================= -->
     <!-- Testcontainers BOM (ONLY) -->
@@ -146,6 +147,19 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Required for JUnit 5 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

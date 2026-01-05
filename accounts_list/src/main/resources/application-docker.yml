@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: account-listing-service
+
+  # --------------------
+  # Database (external)
+  # --------------------
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  # --------------------
+  # Flyway (schema owner)
+  # --------------------
+  flyway:
+    enabled: true
+
+  # --------------------
+  # Kafka (EXTERNAL)
+  # --------------------
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      group-id: account-listing-service
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+    listener:
+      ack-mode: MANUAL
+      missing-topics-fatal: false
+
+  # --------------------
+  # Redis (cache)
+  # --------------------
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST}
+      port: ${SPRING_REDIS_PORT}
+      timeout: 2000ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30s
+      timeout: 2s
+
+# --------------------
+# Logging
+# --------------------
+logging:
+  level:
+    root: INFO
+    org.springframework.kafka: INFO
+    io.lettuce.core: DEBUG
+    org.springframework.data.redis: DEBUG
