@@ -39,17 +39,12 @@ public class TransferService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
     public void transfer(UUID idempotencyKey, TransferRequest req) {
         UUID transferId = UUID.randomUUID();
 //        fraudCheck(transferId, req);
         performTransfer(idempotencyKey, req, transferId);
 
         postProcessor.handlePostTransfer(req);
-        createOutboxEvent(transferId, req);
     }
 
     private void fraudCheck(UUID transferId, TransferRequest req) {
@@ -86,6 +81,10 @@ public class TransferService {
         outboxRepository.save(event);
     }
 
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
     private void performTransfer(UUID idempotencyKey, TransferRequest req, UUID transferId) {
         // 1️⃣ Idempotency check
         if (idemRepo.existsById(idempotencyKey)) {
@@ -129,6 +128,7 @@ public class TransferService {
         key.setCreatedAt(Instant.now());
         idemRepo.save(key);
 
+        createOutboxEvent(transferId, req);
     }
 
     private LedgerEntry entry(UUID accountId,

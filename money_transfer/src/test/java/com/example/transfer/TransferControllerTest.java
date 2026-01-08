@@ -20,55 +20,13 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "spring.profiles.active=test")
-@AutoConfigureMockMvc
-class TransferControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private LedgerRepository ledgerRepository;
+class TransferControllerTest extends BaseIntegrationTest{
 
     @Test
     void shouldAcceptTransferRequest() throws Exception {
+        UUID fromId = createAccount("USD", new BigDecimal("500.00"));
+        UUID toId   = createAccount("USD", BigDecimal.ZERO);
 
-        // 1️⃣ Create accounts
-        UUID fromId = UUID.randomUUID();
-        UUID toId = UUID.randomUUID();
-
-        Account from = new Account();
-        from.setId(fromId);
-        from.setCurrency("USD");
-        from.setStatus("ACTIVE");
-        from.setClientId(UUID.randomUUID());
-
-        Account to = new Account();
-        to.setId(toId);
-        to.setCurrency("USD");
-        to.setStatus("ACTIVE");
-        to.setClientId(UUID.randomUUID());
-
-        accountRepository.save(from);
-        accountRepository.save(to);
-
-        // 2️⃣ Give initial balance
-        LedgerEntry initial = new LedgerEntry();
-        initial.setId(UUID.randomUUID());
-        initial.setAccountId(fromId);
-        initial.setTransferId(UUID.randomUUID());
-        initial.setAmount(new BigDecimal("500.00"));
-        initial.setCreatedAt(Instant.now());
-
-        ledgerRepository.save(initial);
-
-        // 3️⃣ Call API
         TransferRequest request = new TransferRequest();
         request.setFromAccount(fromId);
         request.setToAccount(toId);
