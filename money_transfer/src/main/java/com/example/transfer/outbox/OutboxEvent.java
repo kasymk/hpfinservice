@@ -1,4 +1,4 @@
-package com.example.transfer.domain;
+package com.example.transfer.outbox;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

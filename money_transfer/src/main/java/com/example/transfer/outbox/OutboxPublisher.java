@@ -1,7 +1,7 @@
-package com.example.transfer.service;
+package com.example.transfer.outbox;
 
-import com.example.transfer.domain.OutboxEvent;
-import com.example.transfer.repository.OutboxRepository;
+import com.example.transfer.outbox.OutboxEvent;
+import com.example.transfer.outbox.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;

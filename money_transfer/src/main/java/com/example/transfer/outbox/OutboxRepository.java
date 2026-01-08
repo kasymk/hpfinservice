@@ -1,6 +1,6 @@
-package com.example.transfer.repository;
+package com.example.transfer.outbox;
 
-import com.example.transfer.domain.OutboxEvent;
+import com.example.transfer.outbox.OutboxEvent;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
