@@ -2,26 +2,33 @@ package com.example.transfer.outbox;
 
 import com.example.transfer.events.TransferCompletedEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
+@Component
 public class OutboxPublisher {
-    @Autowired
-    private ObjectMapper objectMapper;
-
+    private final ObjectMapper objectMapper;
+    private final TransferNotificationPublisher notificationPublisher;
     private final OutboxRepository outboxRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    public OutboxPublisher(
+            ObjectMapper objectMapper,
+            OutboxRepository outboxRepository,
+            KafkaTemplate<String, Object> kafkaTemplate,
+            TransferNotificationPublisher notificationPublisher
+    ) {
+        this.objectMapper = objectMapper;
+        this.outboxRepository = outboxRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.notificationPublisher = notificationPublisher;
+    }
     @Scheduled(fixedDelay = 500)
     @Transactional
     public void publish() {
@@ -40,7 +47,7 @@ public class OutboxPublisher {
                         );
 
                 kafkaTemplate.send(
-                        "transfer.notifications",
+                        "transfer.completed",
                         event.getAggregateId().toString(),
                         domainEvent
                 ).get();
@@ -48,6 +55,7 @@ public class OutboxPublisher {
                 event.setStatus(OutboxStatus.SENT.getValue());
                 event.setSentAt(Instant.now());
 
+                notificationPublisher.publish(event);
             } catch (Exception ex) {
                 event.setStatus(OutboxStatus.FAILED.getValue());
             }
