@@ -1,15 +1,15 @@
 package com.example.transfer.service;
 
 import com.example.transfer.domain.Account;
-import com.example.transfer.dto.AccountDto;
+import com.example.transfer.domain.LedgerEntry;
 import com.example.transfer.repository.AccountRepository;
+import com.example.transfer.repository.LedgerRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -17,50 +17,36 @@ import java.util.UUID;
 public class AccountService {
 
     private final AccountRepository accountRepository;
-
-    @Cacheable(
-            cacheNames = "accountsByClient",
-            key = "#clientId"
-    )
-    public List<AccountDto> getAccountsForClient(UUID clientId) {
-
-        return accountRepository.findByClientId(clientId)
-                .stream()
-                .map(a -> new AccountDto(
-                        a.getId(),
-                        a.getCurrency(),
-                        a.getStatus()
-                ))
-                .toList();
-    }
-
-    /**
-     * IMPORTANT: cache invalidation
-     */
-    @CacheEvict(
-            cacheNames = "accountsByClient",
-            key = "#clientId"
-    )
-    public void evictClientAccounts(UUID clientId) {
-        // intentionally empty
-    }
+    private final LedgerRepository ledgerRepo;
 
     @Transactional
-    @CacheEvict(
-            cacheNames = "accountsByClient",
-            key = "#clientId"
-    )
-    public UUID createAccount(UUID clientId, String currency) {
+    public UUID createAccount(UUID clientId, String currency, BigDecimal initialBalance) {
 
+        UUID accountId = createNewAccount(clientId, currency);
+        createInitialBalance(accountId, initialBalance);
+        return accountId;
+    }
+
+    private void createInitialBalance(UUID accountId, BigDecimal initialBalance) {
+        LedgerEntry e = new LedgerEntry();
+        e.setId(UUID.randomUUID());
+        e.setAccountId(accountId);
+        e.setTransferId(UUID.randomUUID());
+        e.setAmount(initialBalance);
+        e.setCreatedAt(Instant.now());
+        ledgerRepo.save(e);
+    }
+
+    private UUID createNewAccount(UUID clientId, String currency) {
+        UUID accountId = UUID.randomUUID();
         Account account = new Account();
-        account.setId(UUID.randomUUID());
+        account.setId(accountId);
         account.setClientId(clientId);
         account.setCurrency(currency);
         account.setStatus("ACTIVE");
 
         accountRepository.save(account);
-
-        return account.getId();
+        return accountId;
     }
 }
 
