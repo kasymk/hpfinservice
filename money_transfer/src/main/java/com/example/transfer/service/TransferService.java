@@ -8,6 +8,7 @@ import com.example.transfer.dto.TransferRequest;
 import com.example.transfer.events.TransferCompletedEvent;
 import com.example.transfer.exception.BusinessException;
 import com.example.transfer.outbox.OutboxEvent;
+import com.example.transfer.outbox.OutboxStatus;
 import com.example.transfer.repository.AccountRepository;
 import com.example.transfer.repository.IdempotencyRepository;
 import com.example.transfer.repository.LedgerRepository;
@@ -79,7 +80,7 @@ public class TransferService {
         event.setAggregateId(transferId);
         event.setEventType("TRANSFER_COMPLETED");
         event.setPayload(createPayload(transferId, req));
-        event.setStatus("NEW");
+        event.setStatus(OutboxStatus.NEW.getValue());
         event.setCreatedAt(Instant.now());
 
         outboxRepository.save(event);

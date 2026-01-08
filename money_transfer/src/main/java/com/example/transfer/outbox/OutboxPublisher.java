@@ -36,11 +36,11 @@ public class OutboxPublisher {
                         event.getPayload()
                 ).get();
 
-                event.setStatus("SENT");
+                event.setStatus(OutboxStatus.SENT.getValue());
                 event.setSentAt(Instant.now());
 
             } catch (Exception ex) {
-                event.setStatus("FAILED");
+                event.setStatus(OutboxStatus.FAILED.getValue());
             }
         }
     }
