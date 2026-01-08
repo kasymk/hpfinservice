@@ -42,12 +42,32 @@ spring:
         spring.json.add.type.headers: true
 
 resilience4j:
+  retry:
+    instances:
+      externalServiceRetry:
+        max-attempts: 5
+        wait-duration: 200ms
+        exponential-backoff-multiplier: 2
+        max-wait-duration: 5s
+        retry-exceptions:
+          - com.example.transfer.exception.TemporaryFailureException
+
   circuitbreaker:
     instances:
       fraudService:
         slidingWindowSize: 20
         failureRateThreshold: 50
         waitDurationInOpenState: 5s
+
+      externalServiceCircuitBreaker:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        record-exceptions:
+          - com.example.transfer.exception.TemporaryFailureException
 
 springdoc:
   api-docs:

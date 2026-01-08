@@ -2,52 +2,34 @@ package com.example.transfer.service;
 
 import com.example.transfer.dto.TransferRequest;
 import com.example.transfer.exception.TemporaryFailureException;
+import com.example.transfer.port.outbound.ExternalTransferClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Recover;
-import org.springframework.retry.annotation.Retryable;
+import io.github.resilience4j.retry.annotation.Retry;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class TransferPostProcessor {
-    private final AtomicInteger attempts = new AtomicInteger();
 
-    @Retryable(
-            retryFor = TemporaryFailureException.class,
-            maxAttempts = 5,
-            backoff = @Backoff(
-                    delay = 200,
-                    multiplier = 2,
-                    maxDelay = 5000
-            )
+    private final ExternalTransferClient externalClient;
+
+    @Retry(
+            name = "externalServiceRetry",
+            fallbackMethod = "recover"
+    )
+    @CircuitBreaker(
+            name = "externalServiceCircuitBreaker"
     )
     public void handlePostTransfer(TransferRequest req) {
-        notifyExternalSystem(req);
-    }
-
-    @Recover
-    public void recover(
-            TemporaryFailureException ex,
-            TransferRequest req
-    ) {
-        // mark transfer as PENDING_RETRY
-        // or enqueue for async retry
-    }
-
-    @CircuitBreaker(
-            name = "externalService",
-            fallbackMethod = "fallback"
-    )
-    public void notifyExternalSystem(TransferRequest req) {
         try {
-            if (attempts.incrementAndGet() < 3) {
-                throw new TemporaryFailureException("Temporary failure", null);
-            }
-            sendExternalRequest(req);
+            log.info("Calling external system");
+            externalClient.send(req);
         } catch (IOException | TimeoutException ex) {
             throw new TemporaryFailureException(
                     "External service unavailable", ex
@@ -55,15 +37,9 @@ public class TransferPostProcessor {
         }
     }
 
-    public void fallback(TransferRequest req, Throwable t) {
-        // enqueue for async processing
-    }
-
-    private void sendExternalRequest(TransferRequest req) throws IOException, TimeoutException{
-    }
-
-    public int attempts() {
-        return attempts.get();
+    public void recover(TransferRequest req, Throwable ex) {
+        // mark transfer as PENDING_RETRY
+        // enqueue for async retry / outbox
     }
 }
 
