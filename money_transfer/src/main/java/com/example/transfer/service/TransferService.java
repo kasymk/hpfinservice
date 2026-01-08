@@ -68,13 +68,13 @@ public class TransferService {
         }
     }
 
-    private void createOutboxEvent(UUID transferId, TransferRequest req) {
+    private void createOutboxEvent(UUID transferId, TransferRequest req, Account from, Account to) {
         OutboxEvent event = new OutboxEvent();
         event.setId(UUID.randomUUID());
         event.setAggregateType("TRANSFER");
         event.setAggregateId(transferId);
         event.setEventType("TRANSFER_COMPLETED");
-        event.setPayload(createPayload(transferId, req));
+        event.setPayload(createPayload(transferId, req, from, to, event.getId()));
         event.setStatus(OutboxStatus.NEW.getValue());
         event.setCreatedAt(Instant.now());
 
@@ -128,7 +128,7 @@ public class TransferService {
         key.setCreatedAt(Instant.now());
         idemRepo.save(key);
 
-        createOutboxEvent(transferId, req);
+        createOutboxEvent(transferId, req, from, to);
     }
 
     private LedgerEntry entry(UUID accountId,
@@ -145,14 +145,17 @@ public class TransferService {
 
     private String createPayload(
             UUID transferId,
-            TransferRequest req
-    ) {
+            TransferRequest req,
+            Account from, Account to, UUID eventId) {
         try {
             TransferCompletedEvent event =
                     new TransferCompletedEvent(
+                            eventId,
                             transferId,
                             req.getFromAccount(),
+                            from.getClientId(),
                             req.getToAccount(),
+                            to.getClientId(),
                             req.getAmount(),
                             req.getCurrency(),
                             Instant.now()

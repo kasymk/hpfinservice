@@ -1,8 +1,9 @@
 package com.example.transfer.outbox;
 
-import com.example.transfer.outbox.OutboxEvent;
-import com.example.transfer.outbox.OutboxRepository;
+import com.example.transfer.events.TransferCompletedEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,9 +16,11 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class OutboxPublisher {
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private final OutboxRepository outboxRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Scheduled(fixedDelay = 500)
     @Transactional
@@ -30,10 +33,16 @@ public class OutboxPublisher {
 
         for (OutboxEvent event : events) {
             try {
+                TransferCompletedEvent domainEvent =
+                        objectMapper.readValue(
+                                event.getPayload(),
+                                TransferCompletedEvent.class
+                        );
+
                 kafkaTemplate.send(
                         "transfer.notifications",
                         event.getAggregateId().toString(),
-                        event.getPayload()
+                        domainEvent
                 ).get();
 
                 event.setStatus(OutboxStatus.SENT.getValue());
