@@ -1,8 +1,7 @@
 package com.example.transfer.fraud;
 
-import com.example.transfer.fraud.FraudCheckRequest;
-import com.example.transfer.fraud.FraudCheckResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
@@ -11,11 +10,15 @@ import java.time.Duration;
 public class FraudClient {
 
     private final WebClient webClient;
+    private final RestClient restClient;
 
-    public FraudClient(WebClient.Builder builder) {
+    public FraudClient(WebClient.Builder builder, RestClient.Builder restClientBuilder) {
         this.webClient = builder
-                .baseUrl("http://fraud-service")
+                .baseUrl("http://localhost:8082")
                 .build();
+        this.restClient = restClientBuilder
+                .baseUrl("http://localhost:8082")
+                .build();;
     }
 
     public FraudCheckResponse check(FraudCheckRequest request) {
@@ -27,6 +30,15 @@ public class FraudClient {
                 .bodyToMono(FraudCheckResponse.class)
                 .timeout(Duration.ofMillis(80))   // HARD timeout
                 .block();
+    }
+
+    public FraudCheckResponse checkRest(FraudCheckRequest request) {
+
+        return restClient.post()
+                .uri("/api/fraud/check")
+                .body(request)
+                .retrieve()
+                .body(FraudCheckResponse.class);
     }
 }
 

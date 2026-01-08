@@ -27,7 +27,7 @@ public class TransferService {
 
     public void transfer(UUID idempotencyKey, TransferRequest req) {
         UUID transferId = UUID.randomUUID();
-//        fraudCheck(transferId, req);
+        fraudCheck(transferId, req);
         transferExecutor.performTransfer(idempotencyKey, req, transferId);
 
         postProcessor.handlePostTransfer(req);

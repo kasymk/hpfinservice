@@ -18,8 +18,8 @@ public class FraudCheckService {
     )
     public FraudDecision check(FraudCheckRequest request) {
 
-        FraudCheckResponse response = client.check(request);
-        return response.decision();
+        FraudCheckResponse response = client.checkRest(request);
+        return response.getDecision();
     }
 
     public FraudDecision fallback(
