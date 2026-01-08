@@ -1,8 +1,5 @@
-package com.example.transfer.service;
+package com.example.transfer.fraud;
 
-import com.example.transfer.dto.FraudCheckRequest;
-import com.example.transfer.dto.FraudCheckResponse;
-import com.example.transfer.dto.FraudDecision;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.stereotype.Service;
 

@@ -1,8 +1,9 @@
 package com.example.transfer.service;
 
 import com.example.transfer.domain.*;
-import com.example.transfer.dto.FraudCheckRequest;
-import com.example.transfer.dto.FraudDecision;
+import com.example.transfer.fraud.FraudCheckRequest;
+import com.example.transfer.fraud.FraudCheckService;
+import com.example.transfer.fraud.FraudDecision;
 import com.example.transfer.dto.TransferRequest;
 import com.example.transfer.events.TransferCompletedEvent;
 import com.example.transfer.exception.BusinessException;

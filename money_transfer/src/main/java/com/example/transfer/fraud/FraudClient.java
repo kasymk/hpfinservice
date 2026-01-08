@@ -1,7 +1,7 @@
-package com.example.transfer.service;
+package com.example.transfer.fraud;
 
-import com.example.transfer.dto.FraudCheckRequest;
-import com.example.transfer.dto.FraudCheckResponse;
+import com.example.transfer.fraud.FraudCheckRequest;
+import com.example.transfer.fraud.FraudCheckResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 

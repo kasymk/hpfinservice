@@ -1,4 +1,4 @@
-package com.example.transfer.dto;
+package com.example.transfer.fraud;
 
 public enum FraudDecision {
     APPROVE,

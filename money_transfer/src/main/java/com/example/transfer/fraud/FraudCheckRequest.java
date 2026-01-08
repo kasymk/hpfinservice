@@ -1,4 +1,4 @@
-package com.example.transfer.dto;
+package com.example.transfer.fraud;
 
 import java.math.BigDecimal;
 import java.util.UUID;
