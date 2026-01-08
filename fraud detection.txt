@@ -1,0 +1,6 @@
+mvn clean package
+docker build -t fraud-detection .
+docker run -p 8082:8082 fraud-detection
+
+
+http://localhost:8082/swagger-ui.html
