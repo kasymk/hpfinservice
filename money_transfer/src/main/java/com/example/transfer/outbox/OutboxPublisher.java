@@ -50,7 +50,7 @@ public class OutboxPublisher {
                         "transfer.completed",
                         event.getAggregateId().toString(),
                         domainEvent
-                ).get();
+                );
 
                 event.setStatus(OutboxStatus.SENT.getValue());
                 event.setSentAt(Instant.now());
