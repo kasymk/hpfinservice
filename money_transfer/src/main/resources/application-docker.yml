@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: money-transfer-service
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+fraud:
+  base-url: http://fraud-detection:8082
+  timeout-ms: 80

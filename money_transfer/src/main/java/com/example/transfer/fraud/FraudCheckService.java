@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class FraudCheckService {
 
-    private final FraudClient client;
+    private final FraudClientRest client;
 
-    public FraudCheckService(FraudClient client) {
+    public FraudCheckService(FraudClientRest client) {
         this.client = client;
     }
 
@@ -18,7 +18,7 @@ public class FraudCheckService {
     )
     public FraudDecision check(FraudCheckRequest request) {
 
-        FraudCheckResponse response = client.checkRest(request);
+        FraudCheckResponse response = client.check(request);
         return response.getDecision();
     }
 
