@@ -1,16 +1,16 @@
 package com.example.accounts.consumer;
 
-import com.example.accounts.entity.AccountView;
 import com.example.accounts.dto.TransferCompletedEvent;
+import com.example.accounts.entity.AccountView;
 import com.example.accounts.entity.ProcessedEvent;
 import com.example.accounts.repository.AccountViewRepository;
 import com.example.accounts.repository.ProcessedEventRepository;
 import com.example.accounts.service.AccountQueryService;
 import com.example.accounts.validation.TransferEventSchemaValidator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -33,7 +33,8 @@ public class TransferEventConsumer {
 
     @KafkaListener(
             topics = "transfer.completed",
-            groupId = "account-listing-service"
+            groupId = "account-listing-service",
+            containerFactory = "kafkaListenerContainerFactory"
     )
     @Transactional
     public void onTransferCompleted(TransferCompletedEvent event) {

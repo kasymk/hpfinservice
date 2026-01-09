@@ -7,10 +7,13 @@ spring:
   # --------------------
   datasource:
     driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${SPRING_DATASOURCE_HOST}:${SPRING_DATASOURCE_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     open-in-view: false
 
   # --------------------
@@ -24,19 +27,6 @@ spring:
   # --------------------
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
-    consumer:
-      group-id: account-listing-service
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-        spring.json.value.default.type: com.example.accounts.dto.TransferCompletedEvent
-
-    listener:
-      ack-mode: MANUAL
-      missing-topics-fatal: false
 
   # --------------------
   # Redis (cache)
@@ -52,13 +42,3 @@ spring:
     redis:
       time-to-live: 30s
       timeout: 2s
-
-# --------------------
-# Logging
-# --------------------
-logging:
-  level:
-    root: INFO
-    org.springframework.kafka: INFO
-    io.lettuce.core: DEBUG
-    org.springframework.data.redis: DEBUG
